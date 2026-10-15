@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aman Enterprise - RentMaster Pro V2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Inter','Noto Sans Devanagari',sans-serif}
+.brand{font-family:'Plus Jakarta Sans',sans-serif}
+.scrollbar::-webkit-scrollbar{width:5px;height:5px}
+.scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+@media print{.no-print{display:none!important}}
+</style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800">
+<div id="app" class="flex min-h-screen">
+<aside class="no-print w-[280px] bg-slate-900 text-white fixed h-full flex flex-col z-20 hidden md:flex">
+<div class="p-6 border-b border-slate-800">
+<div class="flex justify-between items-start">
+<div><h1 class="brand text-[22px] font-bold">Aman Enterprise</h1><p class="text-[11px] tracking-[0.2em] text-slate-400 uppercase mt-1">RentMaster Pro V2</p></div>
+<button onclick="toggleLang()" id="langBtnDesk" class="text-[11px] bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">हिन्दी</button>
+</div>
+<div class="mt-4 bg-slate-800 rounded-xl p-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold">A</div>
+<div><p class="text-sm font-semibold">Admin</p><p class="text-[11px] text-slate-400" data-t="owner">Owner</p></div>
+<div class="ml-auto flex items-center gap-2"><div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><span id="firebaseStatusDesk" class="text-[10px]">Local</span></div>
+</div>
+</div>
+<nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar">
+<button onclick="showPage('dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-600"><span>📊</span> <span data-t="dashboard">Dashboard</span></button>
+<button onclick="showPage('items')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>📦</span> <span data-t="stock">Materials Stock</span></button>
+<button onclick="showPage('issue')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>📤</span> <span data-t="issue">Issue on Rent</span></button>
+<button onclick="showPage('returns')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>📥</span> <span data-t="return">Return / Damage</span></button>
+<button onclick="showPage('parties')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>👥</span> <span data-t="parties">Parties</span></button>
+<button onclick="showPage('reports')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>📈</span> <span data-t="reports">Profit & Reports</span></button>
+<button onclick="showPage('settings')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800"><span>⚙️</span> <span data-t="settings">Settings</span></button>
+</nav>
+<div class="p-3 border-t border-slate-800 space-y-2">
+<button onclick="startBarcodeScan()" class="w-full bg-white text-slate-900 text-xs font-bold px-3 py-2.5 rounded-xl flex items-center justify-center gap-2"><span>📷</span> <span data-t="scanBarcode">Scan Barcode</span></button>
+<div class="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-4">
+<p class="text-sm font-semibold" data-t="needHelp">Need Help?</p><p class="text-xs text-indigo-100 mt-1" data-t="backupText">Backup data daily</p>
+<button onclick="exportData()" class="mt-3 bg-white text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-lg w-full" data-t="export">Export to Excel</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 md:ml-[280px]">
+<div class="no-print md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-10 gap-2">
+<h1 class="brand font-bold text-sm">Aman Enterprise</h1>
+<div class="flex gap-2">
+<button onclick="toggleLang()" id="langBtnMob" class="text-[10px] bg-slate-800 px-2 py-1 rounded-full">हिन्दी</button>
+<select onchange="showPage(this.value)" class="bg-slate-800 rounded-lg px-2 py-1.5 text-xs">
+<option value="dashboard">Dashboard</option>
+<option value="items">Stock</option>
+<option value="issue">Issue</option>
+<option value="returns">Return</option>
+<option value="parties">Parties</option>
+<option value="reports">Reports</option>
+<option value="settings">Settings</option>
+</select>
+</div>
+</div>
+<div id="page-dashboard" class="page p-4 md:p-7 space-y-6">
+<div class="flex flex-wrap justify-between items-center gap-4">
+<h2 class="text-2xl font-bold" data-t="dashboardTitle">Dashboard Overview</h2>
+<div class="flex gap-2"><span id="firebaseStatus" class="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-700">Local Mode</span><span class="text-xs px-3 py-1 rounded-full bg-white border" id="todayDate"></span></div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-white rounded-2xl p-5 border"><p class="text-xs text-slate-500 uppercase" data-t="totalMat">Total Materials</p><h3 id="kpiTotal" class="text-3xl font-bold mt-2">0</h3></div>
+<div class="bg-white rounded-2xl p-5 border"><p class="text-xs text-slate-500 uppercase" data-t="onRent">On Rent Now</p><h3 id="kpiOnRent" class="text-3xl font-bold mt-2 text-indigo-600">0</h3></div>
+<div class="bg-white rounded-2xl p-5 border"><p class="text-xs text-slate-500 uppercase" data-t="monthEarn">Month Earning</p><h3 id="kpiEarning" class="text-3xl font-bold mt-2">₹0</h3></div>
+<div class="bg-white rounded-2xl p-5 border"><p class="text-xs text-slate-500 uppercase" data-t="lossDamage">Loss / Damage</p><h3 id="kpiLoss" class="text-3xl font-bold mt-2 text-red-600">₹0</h3></div>
+</div>
+<div class="grid lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-white rounded-2xl border p-5"><h4 class="font-semibold mb-4" data-t="catStock">Category Wise Stock</h4><canvas id="catChart" height="220"></canvas></div>
+<div class="bg-white rounded-2xl border p-5"><h4 class="font-semibold mb-4" data-t="alerts">Alerts</h4><div id="alertBox" class="space-y-3"></div></div>
+</div>
+<div class="bg-white rounded-2xl border">
+<div class="p-5 flex justify-between items-center"><h4 class="font-semibold" data-t="recentRent">Recent Rentals</h4><button onclick="showPage('returns')" class="text-xs text-indigo-600 font-semibold">View All</button></div>
+<div class="overflow-auto scrollbar"><table class="w-full text-sm"><thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="p-3 text-left" data-t="party">Party</th><th class="p-3" data-t="items">Items</th><th class="p-3" data-t="issueDate">Issue</th><th class="p-3" data-t="returnDate">Expected Return</th><th class="p-3" data-t="status">Status</th></tr></thead><tbody id="recentRentals"></tbody></table></div>
+</div>
+</div>
+<div id="page-items" class="page hidden p-4 md:p-7 space-y-5">
+<div class="flex flex-wrap gap-3 justify-between items-center">
+<h2 class="text-2xl font-bold" data-t="stock">Materials Stock</h2>
+<div class="flex gap-2"><button onclick="startBarcodeScan()" class="px-4 py-2 bg-white border rounded-xl text-sm font-semibold">📷 <span data-t="scan">Scan</span></button><button onclick="openModal('categoryModal')" class="px-4 py-2 bg-white border rounded-xl text-sm font-semibold">+ <span data-t="newGroup">New Group</span></button><button onclick="openModal('itemModal')" class="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold">+ <span data-t="addMat">Add Material</span></button></div>
+</div>
+<div id="categoryTabs" class="flex gap-2 overflow-auto scrollbar pb-2"></div>
+<div class="flex gap-3"><input id="itemSearch" oninput="renderItems()" placeholder="Search material..." class="flex-1 bg-white border rounded-xl px-4 py-2.5 text-sm"><select id="stockFilter" onchange="renderItems()" class="bg-white border rounded-xl px-3 py-2.5 text-sm"><option value="all">All Stock</option><option value="available">Available Only</option><option value="low">Low Stock</option><option value="damaged">Damaged/Lost</option></select></div>
+<div id="itemsGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+</div>
+<div id="page-issue" class="page hidden p-4 md:p-7">
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border shadow-sm">
+<div class="p-6 border-b flex flex-wrap justify-between items-center gap-3"><h2 class="text-xl font-bold">Issue - Aman Enterprise</h2><div class="flex gap-2"><button onclick="startBarcodeScanForIssue()" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full border">📷 Scan to Add Item</button><span class="text-xs px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full" data-t="issueSteps">Party > Items > Billing</span></div></div>
+<div class="p-6 grid md:grid-cols-2 gap-6">
+<div class="space-y-4">
+<h4 class="font-semibold text-sm uppercase tracking-widest text-slate-500" data-t="partyDetails">Party Details</h4>
+<div class="flex gap-2"><input id="partySearchInput" placeholder="Search party..." class="flex-1 border rounded-xl px-4 py-2.5 text-sm"><button onclick="openModal('partyModal')" class="bg-slate-900 text-white px-4 rounded-xl text-sm">+ New</button></div>
+<div id="selectedPartyBox" class="hidden bg-slate-50 border rounded-xl p-4"></div>
+<div class="grid grid-cols-2 gap-3">
+<label class="text-xs"><span data-t="issueDate">Issue Date</span> <input id="issueDate" type="date" class="w-full mt-1 border rounded-lg px-3 py-2 text-sm"></label>
+<label class="text-xs"><span data-t="returnDate">Expected Return</span> <input id="returnDate" type="date" class="w-full mt-1 border rounded-lg px-3 py-2 text-sm"></label>
+</div>
+<h4 class="font-semibold text-sm uppercase tracking-widest text-slate-500 mt-4" data-t="addMats">Add Materials</h4>
+<select id="issueItemSelect" class="w-full border rounded-xl px-4 py-2.5 text-sm"></select>
+<div class="grid grid-cols-3 gap-2 mt-2"><input id="issueQty" type="number" placeholder="Qty" class="border rounded-xl px-3 py-2 text-sm"><input id="issueRate" type="number" placeholder="Rate/Day" class="border rounded-xl px-3 py-2 text-sm"><button onclick="addToIssueCart()" class="bg-indigo-600 text-white rounded-xl text-sm font-semibold" data-t="add">Add</button></div>
+</div>
+<div class="space-y-4">
+<h4 class="font-semibold text-sm uppercase tracking-widest text-slate-500" data-t="billingCart">Billing Cart</h4>
+<div id="issueCart" class="border rounded-xl divide-y min-h-[180px]"></div>
+<div class="bg-slate-900 text-white rounded-xl p-4 space-y-2">
+<div class="flex justify-between text-sm"><span data-t="rentTotal">Rent Total</span><span id="cartRent">₹0</span></div>
+<div class="flex justify-between text-sm"><span data-t="secDeposit">Security Deposit</span><input id="cartDeposit" type="number" value="0" oninput="calcCart()" class="bg-slate-800 w-24 text-right rounded px-2 py-1 text-sm"></div>
+<div class="flex justify-between text-sm"><span data-t="advPaid">Advance Paid</span><input id="cartAdvance" type="number" value="0" oninput="calcCart()" class="bg-slate-800 w-24 text-right rounded px-2 py-1 text-sm"></div>
+<div class="border-t border-slate-700 pt-2 flex justify-between font-bold"><span data-t="balDue">Balance Due</span><span id="cartBalance">₹0</span></div>
+<div class="flex justify-between text-xs text-slate-400"><span><span data-t="days">Days</span>: <b id="cartDays">0</b></span></div>
+</div>
+<button onclick="confirmIssue()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl" data-t="confirmIssue">Confirm & Issue - Print Slip</button>
+</div>
+</div>
+</div>
+</div>
+<div id="page-returns" class="page hidden p-4 md:p-7 space-y-4">
+<h2 class="text-2xl font-bold" data-t="returnTitle">Return & Damage Management</h2>
+<div class="bg-white rounded-2xl border overflow-auto scrollbar"><table class="w-full text-sm"><thead class="bg-slate-50 text-xs uppercase"><tr><th class="p-3 text-left">Rental ID</th><th class="p-3" data-t="party">Party</th><th class="p-3" data-t="items">Items</th><th class="p-3" data-t="status">Status</th><th class="p-3">Action</th></tr></thead><tbody id="returnsTable"></tbody></table></div>
+</div>
+<div id="page-parties" class="page hidden p-4 md:p-7 space-y-4">
+<div class="flex justify-between items-center"><h2 class="text-2xl font-bold" data-t="parties">Parties Ledger</h2><button onclick="openModal('partyModal')" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-sm">+ <span data-t="addParty">Add Party</span></button></div>
+<div class="grid md:grid-cols-3 gap-4" id="partiesGrid"></div>
+</div>
+<div id="page-reports" class="page hidden p-4 md:p-7 space-y-6">
+<h2 class="text-2xl font-bold" data-t="reportsTitle">Profit & All Reports</h2>
+<div class="grid md:grid-cols-4 gap-4">
+<div class="bg-white p-5 rounded-2xl border"><p class="text-xs text-slate-500" data-t="mostProfit">Most Profitable Item</p><h4 id="reportTopItem" class="font-bold mt-2">-</h4></div>
+<div class="bg-white p-5 rounded-2xl border"><p class="text-xs text-slate-500" data-t="topCustomer">Top Customer</p><h4 id="reportTopParty" class="font-bold mt-2">-</h4></div>
+<div class="bg-white p-5 rounded-2xl border"><p class="text-xs text-slate-500" data-t="damagePending">Damage Recovery Pending</p><h4 id="reportDamagePending" class="font-bold mt-2">₹0</h4></div>
+<div class="bg-white p-5 rounded-2xl border"><p class="text-xs text-slate-500" data-t="netProfit">Net Profit</p><h4 id="reportNetProfit" class="font-bold mt-2 text-emerald-600">₹0</h4></div>
+</div>
+<div class="grid lg:grid-cols-2 gap-6">
+<div class="bg-white rounded-2xl border p-5"><h4 class="font-semibold mb-4" data-t="profitByCat">Profit by Category</h4><canvas id="profitChart" height="200"></canvas></div>
+<div class="bg-white rounded-2xl border p-5"><h4 class="font-semibold mb-4" data-t="monthlyEarn">Monthly Earning Trend</h4><canvas id="monthlyChart" height="200"></canvas></div>
+</div>
+<div class="bg-white rounded-2xl border p-5 overflow-auto scrollbar">
+<h4 class="font-semibold mb-4" data-t="damageReport">Loss / Damage / Misuse Report</h4>
+<table class="w-full text-sm"><thead class="bg-slate-50 text-xs uppercase"><tr><th class="p-3 text-left" data-t="date">Date</th><th class="p-3" data-t="party">Party</th><th class="p-3" data-t="item">Item</th><th class="p-3">Type</th><th class="p-3">Qty</th><th class="p-3">Charge</th></tr></thead><tbody id="damageReportBody"></tbody></table>
+</div>
+</div>
+<div id="page-settings" class="page hidden p-4 md:p-7 space-y-6 max-w-3xl">
+<h2 class="text-2xl font-bold" data-t="settingsTitle">Settings & Firebase</h2>
+<div class="bg-white rounded-2xl border p-6 space-y-4">
+<h4 class="font-semibold" data-t="shopDetails">Shop Details (Bill Header)</h4>
+<input id="setShopName" value="Aman Enterprise - itanilyadav@gmail.com" class="w-full border rounded-xl px-4 py-2.5 text-sm">
+<input id="setShopAddress" placeholder="Address, Phone, GST" class="w-full border rounded-xl px-4 py-2.5 text-sm">
+<textarea id="setTerms" class="w-full border rounded-xl px-4 py-2.5 text-sm" rows="3">1. Damage/Lost will be charged extra. 2. Late return penalty applicable. 3. Security deposit refundable after checking materials. Contact: itanilyadav@gmail.com</textarea>
+<button onclick="saveShopSettings()" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-sm" data-t="save">Save</button>
+</div>
+<div class="bg-white rounded-2xl border p-6 space-y-4">
+<h4 class="font-semibold">Firebase Config - Auto Sync</h4>
+<textarea id="firebaseConfigInput" class="w-full border rounded-xl px-4 py-2.5 text-xs font-mono" rows="7" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
+<div class="flex gap-2"><button onclick="saveFirebaseConfig()" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm">Connect Firebase</button><button onclick="clearFirebaseConfig()" class="bg-white border px-5 py-2 rounded-xl text-sm">Local Only</button></div>
+</div>
+</div>
+</main>
+</div>
+<div id="itemModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-30 p-4"><div class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4"><div class="flex justify-between"><h3 class="font-bold text-lg" data-t="addNewMat">Add New Material</h3><button onclick="closeModal('itemModal')">✕</button></div><input id="newItemName" placeholder="Material Name" class="w-full border rounded-xl px-4 py-2.5 text-sm"><select id="newItemCategory" class="w-full border rounded-xl px-4 py-2.5 text-sm"></select><div class="grid grid-cols-2 gap-3"><input id="newItemQty" type="number" placeholder="Total Qty" class="border rounded-xl px-4 py-2.5 text-sm"><input id="newItemRate" type="number" placeholder="Rent / Day" class="border rounded-xl px-4 py-2.5 text-sm"><input id="newItemPurchase" type="number" placeholder="Purchase Price" class="border rounded-xl px-4 py-2.5 text-sm"><input id="newItemDeposit" type="number" placeholder="Security Deposit" class="border rounded-xl px-4 py-2.5 text-sm"><input id="newItemBarcode" placeholder="Barcode / QR Code (for scanner)" class="border rounded-xl px-4 py-2.5 text-sm col-span-2"></div><input id="newItemImage" placeholder="Image URL (optional)" class="w-full border rounded-xl px-4 py-2.5 text-sm"><button onclick="saveItem()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-semibold" data-t="saveMat">Save Material</button></div></div>
+<div id="categoryModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-30 p-4"><div class="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4"><div class="flex justify-between"><h3 class="font-bold" data-t="addNewGroup">Add New Group</h3><button onclick="closeModal('categoryModal')">✕</button></div><input id="newCategoryName" placeholder="e.g. Lighting, Sound" class="w-full border rounded-xl px-4 py-2.5 text-sm"><button onclick="saveCategory()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold" data-t="addGroup">Add Group</button></div></div>
+<div id="partyModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-30 p-4"><div class="bg-white rounded-2xl w-full max-w-md p-6 space-y-4"><div class="flex justify-between"><h3 class="font-bold" data-t="addNewParty">Add New Party</h3><button onclick="closeModal('partyModal')">✕</button></div><input id="newPartyName" placeholder="Full Name" class="w-full border rounded-xl px-4 py-2.5 text-sm"><input id="newPartyPhone" placeholder="Phone Number" class="w-full border rounded-xl px-4 py-2.5 text-sm"><input id="newPartyAddress" placeholder="Address / Village" class="w-full border rounded-xl px-4 py-2.5 text-sm"><input id="newPartyAadhaar" placeholder="Aadhaar / ID (optional)" class="w-full border rounded-xl px-4 py-2.5 text-sm"><button onclick="saveParty()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-semibold" data-t="saveParty">Save Party</button></div></div>
+<div id="returnModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-30 p-4 overflow-auto"><div class="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4 my-8"><div class="flex justify-between"><h3 class="font-bold text-lg" data-t="returnCheck">Return & Check Condition</h3><button onclick="closeModal('returnModal')">✕</button></div><div id="returnModalBody" class="space-y-3"></div><div class="bg-slate-50 p-4 rounded-xl grid grid-cols-2 gap-3"><label class="text-xs">Damage Charges ₹<input id="returnDamageCharge" type="number" value="0" class="w-full mt-1 border rounded-lg px-3 py-2"></label><label class="text-xs">Lost Charges ₹<input id="returnLostCharge" type="number" value="0" class="w-full mt-1 border rounded-lg px-3 py-2"></label><label class="text-xs">Late Fee ₹<input id="returnLateFee" type="number" value="0" class="w-full mt-1 border rounded-lg px-3 py-2"></label><label class="text-xs">Notes<input id="returnNotes" placeholder="Damage details" class="w-full mt-1 border rounded-lg px-3 py-2"></label></div><button onclick="confirmReturn()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold" data-t="confirmReturn">Confirm Return & Update Stock</button></div></div>
+<div id="barcodeModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-40 p-4"><div class="bg-white rounded-2xl w-full max-w-md p-6 space-y-4"><div class="flex justify-between"><h3 class="font-bold">📷 Barcode Scanner</h3><button onclick="closeBarcodeScan()">✕</button></div><div id="reader" class="w-full rounded-xl overflow-hidden border"></div><p class="text-xs text-slate-500 text-center" data-t="scanHint">Point camera to barcode/QR</p><p id="scanResult" class="text-sm font-bold text-center text-indigo-600"></p></div></div>
+<div id="billModal" class="fixed inset-0 bg-white hidden z-40 overflow-auto p-6"><div id="billContent" class="max-w-2xl mx-auto"></div><div class="no-print max-w-2xl mx-auto grid grid-cols-3 gap-3 mt-6"><button onclick="window.print()" class="bg-slate-900 text-white py-3 rounded-xl font-bold">🖨️ Print</button><button onclick="shareOnWhatsApp()" class="bg-[#25D366] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><span>💬</span> WhatsApp</button><button onclick="closeModal('billModal')" class="bg-white border py-3 rounded-xl font-bold">Close</button></div></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+let db=null, useFirebase=false;
+let store={ categories:[], items:[], parties:[], rentals:[], returns:[] };
+let currentCategory='all', issueCart=[], selectedParty=null, activeReturnRental=null, currentLang='en', lastBill=null;
+let catChartInst=null, profitChartInst=null, monthlyChartInst=null, html5QrCode=null, scanMode='general';
+const DEFAULT_CATS = [{id:'utensils', name:'Utensils', nameHi:'बर्तन', icon:'🍽️'},{id:'building', name:'Building Material', nameHi:'भवन सामग्री', icon:'🏗️'},{id:'farming', name:'Farming Tools', nameHi:'खेती के औजार', icon:'🚜'},{id:'furniture', name:'Furniture', nameHi:'फर्नीचर', icon:'🪑'}];
+const TRANSLATIONS = {
+en:{dashboard:"Dashboard",stock:"Materials Stock",issue:"Issue on Rent",return:"Return / Damage",parties:"Parties",reports:"Profit & Reports",settings:"Settings",scanBarcode:"Scan Barcode",owner:"Owner",needHelp:"Need Help?",backupText:"Backup data daily",export:"Export to Excel",dashboardTitle:"Dashboard Overview",totalMat:"Total Materials",onRent:"On Rent Now",monthEarn:"Month Earning",lossDamage:"Loss / Damage",catStock:"Category Wise Stock",alerts:"Alerts",recentRent:"Recent Rentals",party:"Party",items:"Items",issueDate:"Issue Date",returnDate:"Expected Return",status:"Status",newGroup:"New Group",addMat:"Add Material",scan:"Scan",searchMat:"Search material...",allStock:"All Stock",avlOnly:"Available Only",lowStock:"Low Stock",damagedLost:"Damaged/Lost",partyDetails:"Party Details",searchParty:"Search party...",addMats:"Add Materials",rateDay:"Rate/Day",add:"Add",billingCart:"Billing Cart",rentTotal:"Rent Total",secDeposit:"Security Deposit",advPaid:"Advance Paid",balDue:"Balance Due",days:"Days",confirmIssue:"Confirm & Issue - Print Slip",returnTitle:"Return Management",reportsTitle:"Profit & Reports",mostProfit:"Most Profitable Item",topCustomer:"Top Customer",damagePending:"Damage Recovery Pending",netProfit:"Net Profit",profitByCat:"Profit by Category",monthlyEarn:"Monthly Earning Trend",damageReport:"Loss / Damage Report",date:"Date",item:"Item",settingsTitle:"Settings & Firebase",shopDetails:"Shop Details",save:"Save",addNewMat:"Add New Material",matName:"Material Name",totalQty:"Total Qty",rentDay:"Rent / Day",purchasePrice:"Purchase Price",secDep:"Security Deposit",barcode:"Barcode",saveMat:"Save Material",addNewGroup:"Add New Group",groupName:"Group Name",addGroup:"Add Group",addNewParty:"Add New Party",fullName:"Full Name",phone:"Phone",address:"Address",saveParty:"Save Party",addParty:"Add Party",returnCheck:"Return & Check Condition",confirmReturn:"Confirm Return",issueSteps:"Party > Items > Billing",scanHint:"Point camera to barcode/QR"},
+hi:{dashboard:"डैशबोर्ड",stock:"सामग्री स्टॉक",issue:"किराए पर दें",return:"वापसी / नुकसान",parties:"ग्राहक",reports:"मुनाफा रिपोर्ट",settings:"सेटिंग",scanBarcode:"बारकोड स्कैन",owner:"मालिक",needHelp:"मदद चाहिए?",backupText:"रोज बैकअप लें",export:"एक्सेल में भेजें",dashboardTitle:"डैशबोर्ड",totalMat:"कुल सामग्री",onRent:"किराए पर",monthEarn:"इस महीने की कमाई",lossDamage:"नुकसान",catStock:"कैटेगरी स्टॉक",alerts:"अलर्ट",recentRent:"हाल के किराए",party:"ग्राहक",items:"सामान",issueDate:"देने की तारीख",returnDate:"वापसी तारीख",status:"स्थिति",newGroup:"नया ग्रुप",addMat:"सामग्री जोड़ें",scan:"स्कैन",searchMat:"सामग्री खोजें...",allStock:"सभी स्टॉक",avlOnly:"उपलब्ध ही",lowStock:"कम स्टॉक",damagedLost:"टूटा/खोया",partyDetails:"ग्राहक विवरण",searchParty:"नाम / फोन से खोजें",addMats:"सामग्री जोड़ें",rateDay:"रेट/दिन",add:"जोड़ें",billingCart:"बिल कार्ट",rentTotal:"कुल किराया",secDeposit:"जमानत राशि",advPaid:"एडवांस जमा",balDue:"बाकी बकाया",days:"दिन",confirmIssue:"कन्फर्म और जारी करें",returnTitle:"वापसी प्रबंधन",reportsTitle:"मुनाफा रिपोर्ट",mostProfit:"सबसे ज्यादा मुनाफा",topCustomer:"सबसे बड़ा ग्राहक",damagePending:"नुकसान वसूली बाकी",netProfit:"शुद्ध मुनाफा",profitByCat:"कैटेगरी से मुनाफा",monthlyEarn:"मासिक कमाई",damageReport:"नुकसान रिपोर्ट",date:"तारीख",item:"सामान",settingsTitle:"सेटिंग और फायरबेस",shopDetails:"दुकान विवरण",save:"सेव करें",addNewMat:"नई सामग्री जोड़ें",matName:"सामग्री का नाम",totalQty:"कुल संख्या",rentDay:"किराया / दिन",purchasePrice:"खरीद मूल्य",secDep:"जमानत",barcode:"बारकोड",saveMat:"सामग्री सेव करें",addNewGroup:"नया ग्रुप जोड़ें",groupName:"जैसे लाइटिंग",addGroup:"ग्रुप जोड़ें",addNewParty:"नया ग्राहक जोड़ें",fullName:"पूरा नाम",phone:"फोन नंबर",address:"पता / गांव",saveParty:"ग्राहक सेव करें",addParty:"ग्राहक जोड़ें",returnCheck:"वापसी जांच",confirmReturn:"वापसी कन्फर्म",issueSteps:"ग्राहक > सामान > बिल",scanHint:"बारकोड पर कैमरा लगाएं"}
+};
+window.toggleLang=function(){
+ currentLang=currentLang==='en'?'hi':'en';
+ document.getElementById('langBtnDesk').textContent=currentLang==='en'?'हिन्दी':'English';
+ document.getElementById('langBtnMob').textContent=currentLang==='en'?'हिन्दी':'English';
+ applyTranslations();
+ renderItems(); renderParties(); renderReturnsTable(); renderDashboard(); renderReports();
+}
+function applyTranslations(){
+ document.querySelectorAll('[data-t]').forEach(el=>{
+  const key=el.getAttribute('data-t');
+  if(TRANSLATIONS[currentLang][key]) el.textContent=TRANSLATIONS[currentLang][key];
+ });
+}
+function getCatName(cat){
+ if(!cat) return '';
+ return currentLang==='hi' && cat.nameHi? cat.nameHi : cat.name;
+}
+function loadLocal(){
+ try{
+  const s=localStorage.getItem('aman_rent_store_v2');
+  if(s){ store=JSON.parse(s); }
+  if(store.categories.length===0){ store.categories=DEFAULT_CATS; }
+  const fb=localStorage.getItem('aman_firebase_config');
+  if(fb){ document.getElementById('firebaseConfigInput').value=fb; try{ initFirebase(JSON.parse(fb)); }catch(e){} }
+ }catch(e){ store.categories=DEFAULT_CATS; }
+}
+function saveLocal(){ localStorage.setItem('aman_rent_store_v2', JSON.stringify(store)); }
+window.initFirebase=function(cfgObj){
+ try{
+  const app=initializeApp(cfgObj);
+  db=getFirestore(app);
+  useFirebase=true;
+  document.getElementById('firebaseStatus').textContent=currentLang==='hi'?'फायरबेस जुड़ा':'Firebase Connected';
+  document.getElementById('firebaseStatus').className='text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700';
+  document.getElementById('firebaseStatusDesk').textContent='Firebase';
+  loadFromFirebase();
+ }catch(e){ alert('Firebase config invalid: '+e.message); }
+}
+async function loadFromFirebase(){
+ if(!db) return;
+ for(let c of ['categories','items','parties','rentals','returns']){
+  try{
+   const snap=await getDocs(collection(db,c));
+   if(snap.size>0) store[c]=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){}
+ }
+ if(store.categories.length===0) store.categories=DEFAULT_CATS;
+ renderAll();
+}
+window.saveFirebaseConfig=function(){
+ const txt=document.getElementById('firebaseConfigInput').value.trim();
+ if(!txt) return alert('Paste config JSON');
+ try{ const obj=JSON.parse(txt); localStorage.setItem('aman_firebase_config', txt); initFirebase(obj); }catch(e){ alert('Invalid JSON'); }
+}
+window.clearFirebaseConfig=function(){ localStorage.removeItem('aman_firebase_config'); useFirebase=false; db=null; document.getElementById('firebaseStatus').textContent='Local Mode'; }
+window.saveShopSettings=function(){
+ const obj={name:document.getElementById('setShopName').value, address:document.getElementById('setShopAddress').value, terms:document.getElementById('setTerms').value};
+ localStorage.setItem('aman_shop', JSON.stringify(obj)); alert(currentLang==='hi'?'सेव हो गया':'Saved');
+}
+window.showPage=function(p){
+ document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));
+ document.getElementById('page-'+p).classList.remove('hidden');
+ if(p==='dashboard') renderDashboard();
+ if(p==='items') renderItems();
+ if(p==='returns') renderReturnsTable();
+ if(p==='parties') renderParties();
+ if(p==='reports') renderReports();
+ if(p==='issue'){ document.getElementById('issueDate').valueAsDate=new Date(); const d=new Date(); d.setDate(d.getDate()+1); document.getElementById('returnDate').valueAsDate=d; renderIssueSelects(); }
+}
+window.openModal=function(id){ document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); if(id==='itemModal') populateCategorySelects(); }
+window.closeModal=function(id){ document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+window.startBarcodeScan=function(){ scanMode='general'; openModal('barcodeModal'); initScanner(); }
+window.startBarcodeScanForIssue=function(){ scanMode='issue'; openModal('barcodeModal'); initScanner(); }
+window.closeBarcodeScan=function(){ closeModal('barcodeModal'); if(html5QrCode){ html5QrCode.stop().then(()=>{html5QrCode.clear();}); } }
+function initScanner(){
+ if(!window.Html5Qrcode){ document.getElementById('scanResult').textContent='Scanner library failed'; return; }
+ html5QrCode=new Html5Qrcode("reader");
+ const config={fps:10, qrbox:{width:250,height:250}};
+ html5QrCode.start({facingMode:"environment"}, config, (decodedText)=>{
+  document.getElementById('scanResult').textContent='Scanned: '+decodedText;
+  handleScannedCode(decodedText);
+ }, (err)=>{});
+}
+function handleScannedCode(code){
+ const found=store.items.find(i=>i.barcode && i.barcode.toLowerCase()===code.toLowerCase() || i.id===code || i.name.toLowerCase()===code.toLowerCase());
+ if(found){
+  if(scanMode==='issue'){
+   document.getElementById('issueItemSelect').value=found.id;
+   document.getElementById('issueQty').value=1;
+   document.getElementById('issueRate').value=found.rentPerDay;
+   closeBarcodeScan();
+   addToIssueCart();
+   alert('Added: '+found.name);
+  }else{
+   closeBarcodeScan();
+   document.getElementById('itemSearch').value=found.name;
+   showPage('items'); renderItems();
+  }
+ }else{
+  document.getElementById('scanResult').textContent='Code: '+code+' (No item found)';
+ }
+}
+function populateCategorySelects(){
+ const opts=store.categories.map(c=>`<option value="${c.id}">${c.icon||'📦'} ${getCatName(c)}</option>`).join('');
+ document.getElementById('newItemCategory').innerHTML=opts;
+ document.getElementById('issueItemSelect').innerHTML=`<option value="">Select...</option>`+store.items.map(i=>`<option value="${i.id}">${i.name} - Avl:${i.availableQuantity||0} @₹${i.rentPerDay} ${i.barcode?'['+i.barcode+']':''}</option>`).join('');
+ const tabs=`<button onclick="setCat('all')" class="px-4 py-2 rounded-full text-sm border ${currentCategory==='all'?'bg-slate-900 text-white':'bg-white'}">All</button>`+store.categories.map(c=>`<button onclick="setCat('${c.id}')" class="px-4 py-2 rounded-full text-sm border whitespace-nowrap ${currentCategory===c.id?'bg-slate-900 text-white':'bg-white'}">${c.icon||'📦'} ${getCatName(c)}</button>`).join('');
+ document.getElementById('categoryTabs').innerHTML=tabs;
+}
+window.setCat=function(id){ currentCategory=id; renderItems(); populateCategorySelects(); }
+window.saveCategory=async function(){
+ const name=document.getElementById('newCategoryName').value.trim(); if(!name) return;
+ const obj={id:name.toLowerCase().replace(/\s+/g,'_')+'_'+Date.now(), name, nameHi:name, icon:'📦'};
+ store.categories.push(obj); if(useFirebase&&db) await addDoc(collection(db,'categories'), obj); saveLocal(); closeModal('categoryModal'); document.getElementById('newCategoryName').value=''; renderItems();
+}
+window.saveItem=async function(){
+ const item={id:'item_'+Date.now(), name:document.getElementById('newItemName').value.trim(), categoryId:document.getElementById('newItemCategory').value, totalQuantity:parseInt(document.getElementById('newItemQty').value)||0, availableQuantity:parseInt(document.getElementById('newItemQty').value)||0, onRentQuantity:0, damagedQuantity:0, lostQuantity:0, underRepairQuantity:0, rentPerDay:parseFloat(document.getElementById('newItemRate').value)||0, purchasePrice:parseFloat(document.getElementById('newItemPurchase').value)||0, securityDeposit:parseFloat(document.getElementById('newItemDeposit').value)||0, barcode:document.getElementById('newItemBarcode').value.trim(), imageUrl:document.getElementById('newItemImage').value.trim(), createdAt:new Date().toISOString()};
+ if(!item.name) return alert('Enter name');
+ store.items.push(item); if(useFirebase&&db) await addDoc(collection(db,'items'), item); saveLocal(); closeModal('itemModal'); renderItems(); ['newItemName','newItemQty','newItemRate','newItemPurchase','newItemDeposit','newItemBarcode','newItemImage'].forEach(id=>document.getElementById(id).value='');
+}
+function renderItems(){
+ const grid=document.getElementById('itemsGrid'); const q=(document.getElementById('itemSearch')?.value||'').toLowerCase(); const filter=document.getElementById('stockFilter')?.value||'all';
+ let list=store.items;
+ if(currentCategory!=='all') list=list.filter(i=>i.categoryId===currentCategory);
+ if(q) list=list.filter(i=>i.name.toLowerCase().includes(q) || (i.barcode||'').toLowerCase().includes(q));
+ if(filter==='available') list=list.filter(i=>(i.availableQuantity||0)>0);
+ if(filter==='low') list=list.filter(i=>(i.availableQuantity||0)<=3);
+ if(filter==='damaged') list=list.filter(i=>(i.damagedQuantity||0)+(i.lostQuantity||0)>0);
+ grid.innerHTML=list.map(it=>{
+  const cat=store.categories.find(c=>c.id===it.categoryId);
+  return `<div class="bg-white rounded-2xl border p-4 space-y-3"><div class="flex justify-between"><div><p class="text-[11px] text-slate-500 uppercase">${getCatName(cat)||'General'}</p><h4 class="font-bold text-[15px]">${it.name} ${it.barcode?'<span class=text-[10px] bg-slate-100 px-1 rounded>'+it.barcode+'</span>':''}</h4></div><span class="text-xs px-2 py-1 rounded-full ${it.availableQuantity>0?'bg-emerald-50 text-emerald-700':'bg-red-50 text-red-700'}">${it.availableQuantity||0} Avl / ${it.totalQuantity} Total</span></div><div class="grid grid-cols-3 gap-2 text-[11px]"><div class="bg-slate-50 rounded-lg p-2 text-center"><p class="text-slate-500">Rent/Day</p><p class="font-bold">₹${it.rentPerDay}</p></div><div class="bg-slate-50 rounded-lg p-2 text-center"><p class="text-slate-500">On Rent</p><p class="font-bold">${it.onRentQuantity||0}</p></div><div class="bg-amber-50 rounded-lg p-2 text-center"><p class="text-slate-500">Dam/Lost</p><p class="font-bold">${(it.damagedQuantity||0)+(it.lostQuantity||0)}</p></div></div><div class="flex gap-2"><button onclick="editItem('${it.id}')" class="flex-1 text-xs border rounded-lg py-1.5">Edit</button><button onclick="deleteItem('${it.id}')" class="flex-1 text-xs bg-red-50 text-red-600 rounded-lg py-1.5">Delete</button></div></div>`;
+ }).join('') || `<p class="text-sm text-slate-400 col-span-3 text-center py-10">No materials found</p>`;
+ document.getElementById('kpiTotal').textContent=store.items.reduce((s,i)=>s+(i.totalQuantity||0),0);
+ document.getElementById('kpiOnRent').textContent=store.items.reduce((s,i)=>s+(i.onRentQuantity||0),0);
+}
+window.deleteItem=function(id){ if(!confirm('Delete?')) return; store.items=store.items.filter(i=>i.id!==id); saveLocal(); renderItems(); }
+window.editItem=function(id){
+ const it=store.items.find(i=>i.id===id); if(!it) return;
+ document.getElementById('newItemName').value=it.name; document.getElementById('newItemQty').value=it.totalQuantity; document.getElementById('newItemRate').value=it.rentPerDay; document.getElementById('newItemPurchase').value=it.purchasePrice; document.getElementById('newItemDeposit').value=it.securityDeposit; document.getElementById('newItemBarcode').value=it.barcode||''; document.getElementById('newItemImage').value=it.imageUrl||'';
+ store.items=store.items.filter(i=>i.id!==id); openModal('itemModal');
+}
+window.saveParty=async function(){
+ const p={id:'party_'+Date.now(), name:document.getElementById('newPartyName').value.trim(), phone:document.getElementById('newPartyPhone').value.trim(), address:document.getElementById('newPartyAddress').value.trim(), aadhaar:document.getElementById('newPartyAadhaar').value.trim(), createdAt:new Date().toISOString(), totalDue:0};
+ if(!p.name||!p.phone) return alert('Name & Phone required');
+ store.parties.push(p); if(useFirebase&&db) await addDoc(collection(db,'parties'), p); saveLocal(); closeModal('partyModal'); renderParties(); ['newPartyName','newPartyPhone','newPartyAddress','newPartyAadhaar'].forEach(i=>document.getElementById(i).value=''); selectParty(p.id);
+}
+function renderParties(){
+ const grid=document.getElementById('partiesGrid');
+ grid.innerHTML=store.parties.map(p=>{
+  const rentals=store.rentals.filter(r=>r.partyId===p.id).length;
+  const damaged=store.returns.filter(r=>{ const rent=store.rentals.find(rr=>rr.id===r.rentalId); return rent&&rent.partyId===p.id && (r.items.some(it=>it.condition!=='ok')); }).length;
+  return `<div class="bg-white rounded-2xl border p-4"><div class="flex justify-between"><div><h4 class="font-bold">${p.name}</h4><p class="text-xs text-slate-500">${p.phone} • ${p.address}</p></div><span class="text-xs px-2 py-1 rounded-full ${damaged>1?'bg-red-50 text-red-600':'bg-emerald-50 text-emerald-600'}">${damaged>1?'Risky':'Good'}</span></div><div class="mt-3 grid grid-cols-2 gap-2 text-xs"><div class="bg-slate-50 p-2 rounded-lg">Rentals: <b>${rentals}</b></div><div class="bg-slate-50 p-2 rounded-lg">Due: <b>₹${p.totalDue||0}</b></div></div><button onclick="viewParty('${p.id}')" class="mt-3 w-full text-xs border rounded-lg py-2">View Ledger</button></div>`;
+ }).join('')||'<p class="text-sm text-slate-400">No parties yet.</p>';
+}
+window.viewParty=function(id){ const p=store.parties.find(x=>x.id===id); const rents=store.rentals.filter(r=>r.partyId===id); alert(`${p.name}\nPhone: ${p.phone}\nTotal Rentals: ${rents.length}`); }
+function renderIssueSelects(){ populateCategorySelects(); }
+window.selectParty=function(pid){
+ const p=store.parties.find(x=>x.id===pid); if(!p) return; selectedParty=p;
+ document.getElementById('selectedPartyBox').classList.remove('hidden');
+ document.getElementById('selectedPartyBox').innerHTML=`<p class="font-bold text-sm">${p.name}</p><p class="text-xs text-slate-500">${p.phone} - ${p.address}</p>`;
+ document.getElementById('partySearchInput').value=p.name;
+}
+document.getElementById('partySearchInput')?.addEventListener('input', function(){ const q=this.value.toLowerCase(); const found=store.parties.filter(p=>p.name.toLowerCase().includes(q)||p.phone.includes(q)); if(found.length===1) selectParty(found[0].id); });
+window.addToIssueCart=function(){
+ const itemId=document.getElementById('issueItemSelect').value; if(!itemId) return alert('Select material');
+ const qty=parseInt(document.getElementById('issueQty').value)||0; if(qty<=0) return alert('Enter qty');
+ const it=store.items.find(i=>i.id===itemId); if((it.availableQuantity||0)<qty) return alert('Only '+it.availableQuantity+' available');
+ const rate=parseFloat(document.getElementById('issueRate').value)||it.rentPerDay;
+ issueCart.push({itemId, itemName:it.name, qty, rate, purchasePrice:it.purchasePrice});
+ renderCart(); document.getElementById('issueQty').value=''; document.getElementById('issueRate').value='';
+}
+function renderCart(){
+ const div=document.getElementById('issueCart');
+ div.innerHTML=issueCart.map((c,i)=>`<div class="p-3 flex justify-between items-center text-sm"><div><p class="font-semibold">${c.itemName}</p><p class="text-xs text-slate-500">${c.qty} x ₹${c.rate}/day</p></div><div class="flex items-center gap-3"><span class="font-bold">₹${c.qty*c.rate}</span><button onclick="removeCart(${i})" class="text-red-500">✕</button></div></div>`).join('')||'<p class="text-xs text-slate-400 p-4 text-center">No items added</p>';
+ calcCart();
+}
+window.removeCart=function(i){ issueCart.splice(i,1); renderCart(); }
+window.calcCart=function(){
+ const issue=new Date(document.getElementById('issueDate').value); const ret=new Date(document.getElementById('returnDate').value);
+ let days=1; if(issue&&ret){ const diff=Math.ceil((ret-issue)/(1000*60*60*24)); days=diff>0?diff:1; }
+ document.getElementById('cartDays').textContent=days;
+ let rent=issueCart.reduce((s,c)=>s+(c.qty*c.rate*days),0);
+ document.getElementById('cartRent').textContent='₹'+rent;
+ const dep=parseFloat(document.getElementById('cartDeposit').value)||0; const adv=parseFloat(document.getElementById('cartAdvance').value)||0;
+ document.getElementById('cartBalance').textContent='₹'+(rent+dep-adv);
+}
+window.confirmIssue=async function(){
+ if(!selectedParty) return alert('Select party');
+ if(issueCart.length===0) return alert('Add at least one material');
+ const issueDate=document.getElementById('issueDate').value; const expReturn=document.getElementById('returnDate').value;
+ if(!issueDate||!expReturn) return alert('Select dates');
+ const days=parseInt(document.getElementById('cartDays').textContent)||1;
+ const totalRent=issueCart.reduce((s,c)=>s+(c.qty*c.rate*days),0);
+ const deposit=parseFloat(document.getElementById('cartDeposit').value)||0; const advance=parseFloat(document.getElementById('cartAdvance').value)||0;
+ const rental={id:'rent_'+Date.now(), partyId:selectedParty.id, partyName:selectedParty.name, partyPhone:selectedParty.phone, issueDate, expectedReturnDate:expReturn, actualReturnDate:null, items:issueCart.map(c=>({...c})), totalRent, deposit, advancePaid:advance, balanceDue:totalRent+deposit-advance, days, status:'issued', createdAt:new Date().toISOString()};
+ rental.items.forEach(c=>{ const it=store.items.find(i=>i.id===c.itemId); if(it){ it.availableQuantity=(it.availableQuantity||0)-c.qty; it.onRentQuantity=(it.onRentQuantity||0)+c.qty; } });
+ store.rentals.push(rental); if(useFirebase&&db) await addDoc(collection(db,'rentals'), rental);
+ saveLocal(); issueCart=[]; renderCart(); renderItems();
+ const shop=JSON.parse(localStorage.getItem('aman_shop')||'{"name":"Aman Enterprise"}');
+ lastBill=rental;
+ const billHtml=`<div class="border p-6 rounded-2xl"><h2 class="text-2xl font-bold">${shop.name}</h2><p class="text-xs text-slate-500">${shop.address||''}</p><hr class="my-4"><p class="text-sm"><b>Rental ID:</b> ${rental.id}</p><p class="text-sm"><b>Party:</b> ${rental.partyName} - ${rental.partyPhone}</p><p class="text-sm"><b>Issue:</b> ${rental.issueDate} <b>Return:</b> ${rental.expectedReturnDate} (${rental.days} days)</p><table class="w-full mt-4 text-sm border"><thead class="bg-slate-50"><tr><th class="p-2 text-left">Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>${rental.items.map(it=>`<tr><td class="p-2 border-t">${it.itemName}</td><td class="p-2 border-t text-center">${it.qty}</td><td class="p-2 border-t text-center">₹${it.rate}</td><td class="p-2 border-t text-right">₹${it.qty*it.rate*rental.days}</td></tr>`).join('')}</tbody></table><div class="mt-4 text-sm space-y-1 text-right"><p>Rent: ₹${rental.totalRent}</p><p>Deposit: ₹${rental.deposit}</p><p>Advance: -₹${rental.advancePaid}</p><p class="font-bold text-lg">Balance Due: ₹${rental.balanceDue}</p></div><p class="mt-6 text-[11px] text-slate-500">${shop.terms||''}</p><p class="mt-6 text-xs">Signature: _________________</p></div>`;
+ document.getElementById('billContent').innerHTML=billHtml; openModal('billModal');
+ selectedParty=null; document.getElementById('selectedPartyBox').classList.add('hidden');
+}
+window.shareOnWhatsApp=function(){
+ if(!lastBill) return alert('No bill to share');
+ const r=lastBill;
+ let text=`*${JSON.parse(localStorage.getItem('aman_shop')||'{"name":"Aman Enterprise"}').name}* - Rental Bill%0A`;
+ text+=`Rental ID: ${r.id}%0A`;
+ text+=`Party: ${r.partyName} (${r.partyPhone})%0A`;
+ text+=`Issue: ${r.issueDate} | Return: ${r.expectedReturnDate} (${r.days} days)%0A%0A`;
+ text+=`*Items:*%0A`;
+ r.items.forEach(it=>{ text+=`• ${it.itemName} x${it.qty} @₹${it.rate}/day = ₹${it.qty*it.rate*r.days}%0A`; });
+ text+=`%0ARent: ₹${r.totalRent}%0ADeposit: ₹${r.deposit}%0AAdvance: ₹${r.advancePaid}%0A*Balance Due: ₹${r.balanceDue}*%0A%0A`;
+ text+=`Thank you for choosing Aman Enterprise!`;
+ const phone=r.partyPhone?r.partyPhone.replace(/\D/g,''):'';
+ const url=phone?`https://wa.me/91${phone}?text=${text}`:`https://wa.me/?text=${text}`;
+ window.open(url,'_blank');
+}
+function renderReturnsTable(){
+ const tbody=document.getElementById('returnsTable');
+ const list=store.rentals.filter(r=>r.status!=='returned');
+ tbody.innerHTML=list.map(r=>{
+  const overdue=new Date(r.expectedReturnDate)<new Date()&&r.status==='issued';
+  return `<tr class="border-t ${overdue?'bg-red-50':''}"><td class="p-3 font-mono text-xs">${r.id}</td><td class="p-3">${r.partyName}</td><td class="p-3 text-xs">${r.items.map(i=>i.itemName+' x'+i.qty).join(', ')}</td><td class="p-3"><span class="text-xs px-2 py-1 rounded-full ${overdue?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}">${overdue?'OVERDUE':r.status}</span></td><td class="p-3"><button onclick="openReturn('${r.id}')" class="text-xs bg-slate-900 text-white px-3 py-1.5 rounded-lg">Return</button></td></tr>`;
+ }).join('')||'<tr><td colspan="5" class="p-6 text-center text-slate-400 text-sm">No active rentals</td></tr>';
+}
+window.openReturn=function(rentalId){
+ const rental=store.rentals.find(r=>r.id===rentalId); if(!rental) return; activeReturnRental=rental;
+ const body=document.getElementById('returnModalBody');
+ body.innerHTML=rental.items.map((it,idx)=>`<div class="border rounded-xl p-3 grid grid-cols-4 gap-2 items-end"><div class="col-span-4 font-semibold text-sm">${it.itemName} - Rented: ${it.qty}</div><label class="text-[11px]">OK Return<input id="ret_ok_${idx}" type="number" value="${it.qty}" class="w-full border rounded-lg px-2 py-1.5 mt-1"></label><label class="text-[11px]">Damaged<input id="ret_dam_${idx}" type="number" value="0" class="w-full border rounded-lg px-2 py-1.5 mt-1"></label><label class="text-[11px]">Lost<input id="ret_lost_${idx}" type="number" value="0" class="w-full border rounded-lg px-2 py-1.5 mt-1"></label><label class="text-[11px]">Repair<input id="ret_rep_${idx}" type="number" value="0" class="w-full border rounded-lg px-2 py-1.5 mt-1"></label></div>`).join('');
+ openModal('returnModal');
+}
+window.confirmReturn=async function(){
+ if(!activeReturnRental) return;
+ const rental=activeReturnRental;
+ let damageCharge=parseFloat(document.getElementById('returnDamageCharge').value)||0;
+ let lostCharge=parseFloat(document.getElementById('returnLostCharge').value)||0;
+ let lateFee=parseFloat(document.getElementById('returnLateFee').value)||0;
+ let returnItems=[];
+ rental.items.forEach((it,idx)=>{
+  const ok=parseInt(document.getElementById(`ret_ok_${idx}`).value)||0;
+  const dam=parseInt(document.getElementById(`ret_dam_${idx}`).value)||0;
+  const lost=parseInt(document.getElementById(`ret_lost_${idx}`).value)||0;
+  const rep=parseInt(document.getElementById(`ret_rep_${idx}`).value)||0;
+  returnItems.push({itemId:it.itemId, itemName:it.itemName, ok, damaged:dam, lost, repair:rep, condition: dam>0||lost>0||rep>0?'damaged':'ok'});
+  const stockItem=store.items.find(s=>s.id===it.itemId);
+  if(stockItem){
+   stockItem.onRentQuantity=(stockItem.onRentQuantity||0)-it.qty;
+   stockItem.availableQuantity=(stockItem.availableQuantity||0)+ok;
+   stockItem.damagedQuantity=(stockItem.damagedQuantity||0)+dam;
+   stockItem.lostQuantity=(stockItem.lostQuantity||0)+lost;
+   stockItem.underRepairQuantity=(stockItem.underRepairQuantity||0)+rep;
+  }
+ });
+ rental.status='returned'; rental.actualReturnDate=new Date().toISOString().split('T')[0];
+ const retRec={id:'return_'+Date.now(), rentalId:rental.id, partyId:rental.partyId, partyName:rental.partyName, returnDate:new Date().toISOString().split('T')[0], items:returnItems, damageCharge, lostCharge, lateFee, notes:document.getElementById('returnNotes').value, createdAt:new Date().toISOString()};
+ store.returns.push(retRec);
+ if(useFirebase&&db) await addDoc(collection(db,'returns'), retRec);
+ saveLocal(); closeModal('returnModal'); renderReturnsTable(); renderItems(); renderDashboard();
+}
+function renderDashboard(){
+ const todayEl=document.getElementById('todayDate'); if(todayEl) todayEl.textContent=new Date().toLocaleDateString(currentLang==='hi'?'hi-IN':'en-IN',{day:'numeric',month:'short',year:'numeric'});
+ const monthEarn=store.rentals.filter(r=>new Date(r.issueDate).getMonth()===new Date().getMonth()).reduce((s,r)=>s+(r.totalRent||0),0);
+ const earnEl=document.getElementById('kpiEarning'); if(earnEl) earnEl.textContent='₹'+monthEarn;
+ const loss=store.returns.reduce((s,r)=>s+(r.damageCharge||0)+(r.lostCharge||0)+(r.lateFee||0),0);
+ const lossEl=document.getElementById('kpiLoss'); if(lossEl) lossEl.textContent='₹'+loss;
+ document.getElementById('recentRentals').innerHTML=store.rentals.slice(-6).reverse().map(r=>{
+  const overdue=new Date(r.expectedReturnDate)<new Date()&&r.status==='issued';
+  return `<tr class="border-t ${overdue?'bg-red-50':''}"><td class="p-3 font-medium">${r.partyName}</td><td class="p-3 text-xs">${r.items.length} items</td><td class="p-3 text-xs">${r.issueDate}</td><td class="p-3 text-xs">${r.expectedReturnDate}</td><td class="p-3"><span class="text-[10px] px-2 py-1 rounded-full ${overdue?'bg-red-600 text-white':'bg-slate-100'}">${overdue?'OVERDUE':r.status}</span></td></tr>`;
+ }).join('')||'<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">No rentals yet</td></tr>';
+ const catData=store.categories.map(c=>({label:getCatName(c), count:store.items.filter(i=>i.categoryId===c.id).reduce((s,i)=>s+(i.totalQuantity||0),0)}));
+ if(catChartInst) catChartInst.destroy();
+ catChartInst=new Chart(document.getElementById('catChart'), {type:'doughnut', data:{labels:catData.map(d=>d.label), datasets:[{data:catData.map(d=>d.count), backgroundColor:['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4']}]}, options:{plugins:{legend:{position:'bottom'}}}});
+ const alerts=document.getElementById('alertBox');
+ let html='';
+ const lowItems=store.items.filter(i=>(i.availableQuantity||0)<=2&& (i.totalQuantity||0)>0);
+ if(lowItems.length) html+=`<div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs"><p class="font-bold text-amber-800">Low Stock</p><p class="text-amber-700 mt-1">${lowItems.map(i=>i.name+' ('+i.availableQuantity+')').join(', ')}</p></div>`;
+ const overdueRents=store.rentals.filter(r=>new Date(r.expectedReturnDate)<new Date()&&r.status==='issued');
+ if(overdueRents.length) html+=`<div class="bg-red-50 border border-red-200 rounded-xl p-3 text-xs"><p class="font-bold text-red-800">${overdueRents.length} Overdue Rentals</p><p class="text-red-700 mt-1">${overdueRents.map(r=>r.partyName).join(', ')}</p></div>`;
+ if(!html) html=`<p class="text-xs text-slate-400">All good. No alerts.</p>`;
+ alerts.innerHTML=html;
+}
+function renderReports(){
+ const profitByCat={};
+ store.rentals.forEach(r=>{ r.items.forEach(it=>{ const stock=store.items.find(s=>s.id===it.itemId); const catId=stock?stock.categoryId:'other'; profitByCat[catId]=(profitByCat[catId]||0)+ (it.qty*it.rate*(r.days||1)); }); });
+ if(profitChartInst) profitChartInst.destroy();
+ profitChartInst=new Chart(document.getElementById('profitChart'), {type:'bar', data:{labels:Object.keys(profitByCat).map(k=>store.categories.find(c=>c.id===k)?.name||k), datasets:[{label:'Earning ₹', data:Object.values(profitByCat), backgroundColor:'#6366f1'}]}, options:{responsive:true}});
+ const months={}; store.rentals.forEach(r=>{ const m=new Date(r.issueDate).toLocaleString('default',{month:'short'}); months[m]=(months[m]||0)+(r.totalRent||0); });
+ if(monthlyChartInst) monthlyChartInst.destroy();
+ monthlyChartInst=new Chart(document.getElementById('monthlyChart'), {type:'line', data:{labels:Object.keys(months), datasets:[{label:'Monthly Earning', data:Object.values(months), borderColor:'#10b981', backgroundColor:'#d1fae5', fill:true, tension:0.4}]}, options:{responsive:true}});
+ let itemProfit={}; store.rentals.forEach(r=>{ r.items.forEach(it=>{ itemProfit[it.itemName]=(itemProfit[it.itemName]||0)+(it.qty*it.rate*(r.days||1)); }); });
+ let topItem=Object.entries(itemProfit).sort((a,b)=>b[1]-a[1])[0];
+ document.getElementById('reportTopItem').textContent=topItem?`${topItem[0]} - ₹${topItem[1]}`:'-';
+ let partyProfit={}; store.rentals.forEach(r=>{ partyProfit[r.partyName]=(partyProfit[r.partyName]||0)+(r.totalRent||0); });
+ let topParty=Object.entries(partyProfit).sort((a,b)=>b[1]-a[1])[0];
+ document.getElementById('reportTopParty').textContent=topParty?`${topParty[0]} - ₹${topParty[1]}`:'-';
+ const totalRepair=store.returns.reduce((s,r)=>s+(r.damageCharge||0)+(r.lostCharge||0)+(r.lateFee||0),0);
+ document.getElementById('reportDamagePending').textContent='₹'+totalRepair;
+ const totalRentAll=store.rentals.reduce((s,r)=>s+(r.totalRent||0),0);
+ const totalPurchaseLost=store.items.reduce((s,i)=>s+((i.lostQuantity||0)*(i.purchasePrice||0)),0);
+ document.getElementById('reportNetProfit').textContent='₹'+(totalRentAll-totalPurchaseLost);
+ document.getElementById('damageReportBody').innerHTML=store.returns.flatMap(r=>r.items.filter(it=>it.damaged>0||it.lost>0||it.repair>0).map(it=>`<tr class="border-t"><td class="p-3 text-xs">${r.returnDate}</td><td class="p-3">${r.partyName}</td><td class="p-3">${it.itemName}</td><td class="p-3 text-xs"><span class="px-2 py-1 rounded-full ${it.lost>0?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}">${it.lost>0?'LOST':it.damaged>0?'DAMAGED':'REPAIR'}</span></td><td class="p-3 text-center">${it.lost||it.damaged||it.repair}</td><td class="p-3">₹${r.lostCharge+r.damageCharge}</td></tr>`)).join('')||'<tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">No damage/lost records</td></tr>';
+}
+window.exportData=function(){
+ let csv='Type,ID,Name,Qty,Rate,Date,Party\n';
+ store.items.forEach(i=>{ csv+=`Item,${i.id},${i.name},${i.totalQuantity},${i.rentPerDay},${i.createdAt},\n`; });
+ store.rentals.forEach(r=>{ r.items.forEach(it=>{ csv+=`Rental,${r.id},${it.itemName},${it.qty},${it.rate},${r.issueDate},${r.partyName}\n`; }); });
+ const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Aman_Enterprise_Report.csv'; a.click();
+}
+function renderAll(){ renderDashboard(); renderItems(); renderReturnsTable(); renderParties(); applyTranslations(); }
+loadLocal(); renderAll(); showPage('dashboard');
+</script>
+</body>
+</html>
