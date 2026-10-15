@@ -173,6 +173,16 @@
 <div id="billModal" class="fixed inset-0 bg-white hidden z-40 overflow-auto p-6"><div id="billContent" class="max-w-2xl mx-auto"></div><div class="no-print max-w-2xl mx-auto grid grid-cols-3 gap-3 mt-6"><button onclick="window.print()" class="bg-slate-900 text-white py-3 rounded-xl font-bold">🖨️ Print</button><button onclick="shareOnWhatsApp()" class="bg-[#25D366] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><span>💬</span> WhatsApp</button><button onclick="closeModal('billModal')" class="bg-white border py-3 rounded-xl font-bold">Close</button></div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// --- YOUR FIREBASE CONFIG - AMAN ENTERPRISE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyB9kgG9oEDXVRb4Qi_txtSysjZ8sigeJBc",
+  authDomain: "freshmicrogreens-f3f9c.firebaseapp.com",
+  databaseURL: "https://freshmicrogreens-f3f9c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "freshmicrogreens-f3f9c",
+  storageBucket: "freshmicrogreens-f3f9c.firebasestorage.app",
+  messagingSenderId: "932818287084",
+  appId: "1:932818287084:web:b827976f03cfa58d2828c9"
+};
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 let db=null, useFirebase=false;
 let store={ categories:[], items:[], parties:[], rentals:[], returns:[] };
@@ -494,7 +504,12 @@ window.exportData=function(){
  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Aman_Enterprise_Report.csv'; a.click();
 }
 function renderAll(){ renderDashboard(); renderItems(); renderReturnsTable(); renderParties(); applyTranslations(); }
-loadLocal(); renderAll(); showPage('dashboard');
+loadLocal();
+try{
+  initFirebase(firebaseConfig);
+  document.getElementById('firebaseConfigInput').value = JSON.stringify(firebaseConfig, null, 2);
+}catch(e){ console.log(e); }
+renderAll(); showPage('dashboard');
 </script>
 </body>
 </html>
